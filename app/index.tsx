@@ -8,16 +8,35 @@ import {
   View,
 } from "react-native";
 import { Button, Text, TextInput, Title } from "react-native-paper";
+import { supabase } from "../src/services/supabaseClient";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // temporary simulation
-    router.replace("/home");
+  const handleLogin = async () => {
+    setError("");
+
+    if (!email || !password) {
+      setError("Please enter email and password");
+      return;
+    }
+
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      router.replace("/home");
+    }
   };
 
   return (
@@ -43,6 +62,7 @@ export default function LoginScreen() {
           style={styles.input}
           mode="outlined"
           keyboardType="email-address"
+          autoCapitalize="none"
         />
         <TextInput
           label="Password"
@@ -55,7 +75,12 @@ export default function LoginScreen() {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <Button mode="contained" onPress={handleLogin} style={styles.button}>
+        <Button
+          mode="contained"
+          onPress={handleLogin}
+          style={styles.button}
+          loading={loading}
+        >
           Login
         </Button>
 
